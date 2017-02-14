@@ -174,7 +174,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
         # get current values for all tickets within milestone and sprints
 
-        query_args[self.estimation_field + "!"] = None
+        query_args[self.remaining_field + "!"] = None
         tickets = execute_query(self.env, req, query_args)
 
         # add the open effort for each ticket for each day to the timetable
@@ -186,7 +186,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
             creation_date = t['time'].date()
             latest_status = t['status']
-            latest_estimate = self._cast_estimate(t[self.estimation_field])
+            latest_estimate = self._cast_estimate(t[self.remaining_field])
             if latest_estimate is None:
                 latest_estimate = Decimal(0)
 
@@ -196,7 +196,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
                 "DISTINCT c.field as field, c.time AS time, c.oldvalue as oldvalue, c.newvalue as newvalue "
                 "FROM ticket t, ticket_change c "
                 "WHERE t.id = %s and c.ticket = t.id and (c.field=%s or c.field='status')"
-                "ORDER BY c.time ASC", [t['id'], self.estimation_field])
+                "ORDER BY c.time ASC", [t['id'], self.remaining_field])
 
             # Build up two dictionaries, mapping dates when effort/status
             # changed, to the latest effort/status on that day (in case of
@@ -212,7 +212,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
             for row in history_cursor:
                 row_field, row_time, row_old, row_new = row
                 event_date = from_timestamp(row_time).date()
-                if row_field == self.estimation_field:
+                if row_field == self.remaining_field:
                     new_value = self._cast_estimate(row_new)
                     if new_value is not None:
                         estimate_history[event_date] = new_value

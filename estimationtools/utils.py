@@ -32,6 +32,11 @@ def get_spent_field():
         doc="""Defines what custom field should be used to calculate spent charts.
         Defaults to 'spenthours'""")
 
+def get_remaining_field():
+    return Option('estimation-tools', 'remaining_field', 'remaininghours',
+        doc="""Defines what custom field should be used to calculate remaining charts.
+        Defaults to 'remaininghours'""")
+
 def get_closed_states():
     return ListOption('estimation-tools', 'closed_states', 'closed',
         doc="""Set to a comma separated list of workflow states that count
@@ -59,6 +64,7 @@ class EstimationToolsBase(Component):
     abstract = True
     estimation_field = get_estimation_field()
     spent_field = get_spent_field()
+    remaining_field = get_remaining_field()
     def __init__(self, *args, **kwargs):
         if not self.env.config.has_option('ticket-custom',
                                           self.estimation_field):
@@ -71,6 +77,12 @@ class EstimationToolsBase(Component):
             # No spent field configured. Disable plugin and log error.
             self.log.error("EstimationTools (%s): "
                         "Spent field not configured. "
+                        "Component disabled.", self.__class__.__name__)
+            self.env.disable_component(self)
+        if not self.env.config.has_option('ticket-custom', self.remaining_field):
+            # No remaining field configured. Disable plugin and log error.
+            self.log.error("EstimationTools (%s): "
+                        "Remaining field not configured. "
                         "Component disabled.", self.__class__.__name__)
             self.env.disable_component(self)
 

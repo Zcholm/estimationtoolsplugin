@@ -23,9 +23,9 @@ class HoursRemaining(EstimationToolsBase, WikiMacroBase):
         req = formatter.req
         _ignore, options = parse_args(content, strict=False)
 
-        # we have to add custom estimation field to query so that field is added to
+        # we have to add custom remaining field to query so that field is added to
         # resulting ticket list
-        options[self.estimation_field + "!"] = None
+        options[self.remaining_field + "!"] = None
 
         # ignore closed tickets
         options['status!'] = "|".join(self.closed_states)
@@ -35,7 +35,7 @@ class HoursRemaining(EstimationToolsBase, WikiMacroBase):
         sum = 0.0
         for t in tickets:
             try:
-                sum += float(t[self.estimation_field])
+                sum += float(t[self.remaining_field])
             except:
                 pass
 

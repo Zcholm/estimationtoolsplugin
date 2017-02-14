@@ -42,7 +42,7 @@ class WorkloadChart(EstimationToolsBase, WikiMacroBase):
         # prepare options
         options, query_args = parse_options(db, content, copy.copy(DEFAULT_OPTIONS))
 
-        query_args[self.estimation_field + "!"] = None
+        query_args[self.remaining_field + "!"] = None
         tickets = execute_query(self.env, req, query_args)
 
         sum = 0.0
@@ -51,7 +51,7 @@ class WorkloadChart(EstimationToolsBase, WikiMacroBase):
             if ticket['status'] in self.closed_states:
                 continue
             try:
-                estimation = float(ticket[self.estimation_field])
+                estimation = float(ticket[self.remaining_field])
                 owner = ticket['owner']
                 sum += estimation
                 if estimations.has_key(owner):
