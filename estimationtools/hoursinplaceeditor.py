@@ -19,7 +19,7 @@ class HoursInPlaceEditor(EstimationToolsBase):
         return req.path_info == '/estimationtools/edithours.js'
 
     def process_request(self, req):
-        data = {'field': self.estimation_field}
+        data = {'field': self.remaining_field}
         return 'edithours.html', {'data': data}, 'text/javascript'
 
     # IRequestFilter methods
@@ -31,7 +31,7 @@ class HoursInPlaceEditor(EstimationToolsBase):
             realm = data['context'].resource.realm
         except:
             realm = None
-        if realm in ('query', 'report', 'wiki', 'milestone') \
+        if realm in ('query', 'report', 'wiki', 'milestone', 'roadmap') \
                 and (not 'preview' in req.args) \
                 and req.perm.has_permission('TICKET_MODIFY') \
                 and req.perm.has_permission('XML_RPC'):
