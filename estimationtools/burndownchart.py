@@ -1,62 +1,78 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2008-2010 Joachim Hoessler <hoessler@gmail.com>
+# All rights reserved.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution.
+
 import copy
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-from genshi.builder import tag
 from trac.core import TracError
+from trac.util.datefmt import from_utimestamp
+from trac.util.html import html as tag
 from trac.util.text import unicode_quote, unicode_urlencode
 from trac.wiki.macros import WikiMacroBase
 
 from estimationtools.utils import parse_options, execute_query, \
-                                  get_estimation_field, get_closed_states, \
-                                  from_timestamp, get_serverside_charts,\
+                                  get_closed_states, get_serverside_charts, \
                                   EstimationToolsBase
 
 DEFAULT_OPTIONS = {'width': '800', 'height': '200', 'color': 'ff9900',
                    'expected': '0', 'bgcolor': 'ffffff00',
-                   'wecolor':'ccccccaa', 'colorexpected': 'ffddaa',
-                   'weekends':'true', 'gridlines' : '0'}
+                   'wecolor': 'ccccccaa', 'colorexpected': 'ffddaa',
+                   'weekends': 'true', 'gridlines': '0'}
 
 
 class BurndownChart(EstimationToolsBase, WikiMacroBase):
     """Creates burn down chart for selected tickets.
 
-    This macro creates a chart that can be used to visualize the progress in a milestone (e.g., sprint or
-    product backlog).
-    For a given set of tickets and a time frame, the remaining estimated effort is calculated.
+    This macro creates a chart that can be used to visualize the progress in
+    a milestone (e.g., sprint or product backlog). For a given set of tickets
+    and a time frame, the remaining estimated effort is calculated.
 
     The macro has the following parameters:
-     * a comma-separated list of query parameters for the ticket selection, in the form "key=value" as specified in TracQuery#QueryLanguage.
-     * `startdate`: '''mandatory''' parameter that specifies the start date of the period (ISO8601 format)
-     * `enddate`: end date of the period. If omitted, it defaults to either the milestones (if given) `completed' date,
-       or `due` date, or today (in that order) (ISO8601 format)
+     * a comma-separated list of query parameters for the ticket selection, 
+       in the form "key=value" as specified in TracQuery#QueryLanguage.
+     * `startdate`: '''mandatory''' parameter that specifies the start date
+       of the period (ISO8601 format)
+     * `enddate`: end date of the period. If omitted, it defaults to either
+       the milestones (if given) `completed' date, or `due` date, or today
+       (in that order) (ISO8601 format)
      * `weekends`: include weekends in chart. Defaults to `true` 
      * `title`: chart title. Defaults to first milestone or 'Burndown Chart'
-     * `expected`: show expected progress in chart, 0 or any number to define initial expected hours (defaults to 0).
-     * `gridlines`: show gridlines in chart, 0 or any number to define hour steps (defaults to 0)
+     * `expected`: show expected progress in chart, 0 or any number to define
+       initial expected hours (defaults to 0).
+     * `gridlines`: show gridlines in chart, 0 or any number to define hour
+       steps (defaults to 0)
      * `width`: width of resulting diagram (defaults to 800)
      * `height`: height of resulting diagram (defaults to 200)
-     * `color`: color specified as 6-letter string of hexadecimal values in the format `RRGGBB`.
-       Defaults to `ff9900`, a nice orange.
-     * `colorexpected`: color for expected hours graph specified as 6-letter string of hexadecimal values in the format `RRGGBB`.
+     * `color`: color specified as 6-letter string of hexadecimal values in
+       the format `RRGGBB`. Defaults to `ff9900`, a nice orange.
+     * `colorexpected`: color for expected hours graph specified as 6-letter
+       string of hexadecimal values in the format `RRGGBB`.
        Defaults to ffddaa, a nice yellow.
-     * `bgcolor`: chart drawing area background color specified as 6-letter string of hexadecimal values in the format `RRGGBB`.
-       Defaults to `ffffff`.
-     * `wecolor`: chart drawing area background color for weekends specified as 6-letter string of hexadecimal values in the format `RRGGBB`.
+     * `bgcolor`: chart drawing area background color specified as 6-letter
+       string of hexadecimal values in the format `RRGGBB`. Defaults to
+       `ffffff`.
+     * `wecolor`: chart drawing area background color for weekends specified
+       as 6-letter string of hexadecimal values in the format `RRGGBB`.
        Defaults to `ccccccaa`.
 
     Examples:
     {{{
-        [[BurndownChart(milestone=Sprint 1, startdate=2008-01-01)]]
-        [[BurndownChart(milestone=Release 3.0|Sprint 1, startdate=2008-01-01, enddate=2008-01-15,
-            weekends=false, expected=100, gridlines=20, width=600, height=100, color=0000ff)]]
+    [[BurndownChart(milestone=Sprint 1, startdate=2008-01-01)]]
+    [[BurndownChart(milestone=Release 3.0|Sprint 1, startdate=2008-01-01, enddate=2008-01-15,
+        weekends=false, expected=100, gridlines=20, width=600, height=100, color=0000ff)]]
     }}}
     """
 
     closed_states = get_closed_states()
     serverside_charts = get_serverside_charts()
 
-    def expand_macro(self, formatter, name, content):
+    def expand_macro(self, formatter, name, content, args=None):
 
         # prepare options
         req = formatter.req
@@ -67,12 +83,12 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
             raise TracError("No start date specified!")
 
         # minimum time frame is one day
-        if (options['startdate'] >= options['enddate']):
+        if options['startdate'] >= options['enddate']:
             options['enddate'] = options['startdate'] + timedelta(days=1)
 
         # calculate data
         timetable = self._calculate_timetable(options, query_args, req)
-        
+
         # remove weekends
         if not options['weekends']:
             for date in timetable.keys():
@@ -84,22 +100,25 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
         # build html for google chart api
         dates = sorted(timetable.keys())
-        bottomaxis = "0:|" + ("|").join([str(date.day) for date in dates]) + \
-            "|1:|%s/%s|%s/%s" % (dates[0].month, dates[0].year,
-                                 dates[ - 1].month, dates[ - 1].year)
+        bottomaxis = "0:|" + "|".join([str(date.day) for date in dates]) + \
+                     "|1:|%s/%s|%s/%s" % (dates[0].month, dates[0].year,
+                                          dates[- 1].month, dates[- 1].year)
         leftaxis = "2,0,%s" % maxhours
-        
+
         # add line for expected progress
         if options['expected'] == '0':
             expecteddata = ""
         else:
-            expecteddata = "|0,100|%s,0" % (round(Decimal(options['expected']) * 100 / maxhours, 2))
+            expecteddata = "|0,100|%s,0" % (
+                round(Decimal(options['expected']) * 100 / maxhours, 2))
 
         # prepare gridlines
         if options['gridlines'] == '0':
-            gridlinesdata = "100.0,100.0,1,0"  # create top and right bounding line by using grid
+            # create top and right bounding line by using grid
+            gridlinesdata = "100.0,100.0,1,0"
         else:
-            gridlinesdata = "%s,%s" % (xdata[1], (round(Decimal(options['gridlines']) * 100 / maxhours, 4)))
+            gridlinesdata = "%s,%s" % (xdata[1], (
+                round(Decimal(options['gridlines']) * 100 / maxhours, 4)))
 
         # mark weekends
         weekends = []
@@ -112,16 +131,19 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
             if saturday and date.weekday() == 6:
                 weekends.append("R,%s,0,%s,%s" %
                                 (options['wecolor'],
-                                 self._round((Decimal(xdata[saturday]) / 100) - halfday),
-                                 self._round((Decimal(xdata[index]) / 100) + halfday)))
+                                 self._round((Decimal(
+                                     xdata[saturday]) / 100) - halfday),
+                                 self._round(
+                                     (Decimal(xdata[index]) / 100) + halfday)))
                 saturday = None
             index += 1
         # special handling if time period starts with Sundays...
         if len(dates) > 0 and dates[0].weekday() == 6:
             weekends.append("R,%s,0,0.0,%s" % (options['wecolor'], halfday))
         # or ends with Saturday
-        if len(dates) > 0 and dates[ - 1].weekday() == 5:
-            weekends.append("R,%s,0,%s,1.0" % (options['wecolor'], Decimal(1) - halfday))
+        if len(dates) > 0 and dates[- 1].weekday() == 5:
+            weekends.append(
+                "R,%s,0,%s,1.0" % (options['wecolor'], Decimal(1) - halfday))
 
         # chart title
         title = options.get('title', None)
@@ -129,25 +151,28 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
             title = options['milestone'].split('|')[0]
 
         chart_args = unicode_urlencode(
-                    {'chs': '%sx%s' % (options['width'], options['height']),
-                     'chf': 'c,s,%s|bg,s,00000000' % options['bgcolor'],
-                     'chd': 't:%s|%s%s' % (",".join(xdata), ",".join(ydata), expecteddata),
-                     'cht': 'lxy',
-                     'chxt': 'x,x,y',
-                     'chxl': bottomaxis,
-                     'chxr': leftaxis,
-                     'chm': "|".join(weekends),
-                     'chg': gridlinesdata,
-                     'chco': '%s,%s' % (options['color'], options['colorexpected']),
-                     'chtt': title})
-        self.log.debug("BurndownChart data: %s" % repr(chart_args))
+            {'chs': '%sx%s' % (options['width'], options['height']),
+             'chf': 'c,s,%s|bg,s,00000000' % options['bgcolor'],
+             'chd': 't:%s|%s%s' % (
+                 ",".join(xdata), ",".join(ydata), expecteddata),
+             'cht': 'lxy',
+             'chxt': 'x,x,y',
+             'chxl': bottomaxis,
+             'chxr': leftaxis,
+             'chm': "|".join(weekends),
+             'chg': gridlinesdata,
+             'chco': '%s,%s' % (options['color'], options['colorexpected']),
+             'chtt': title})
+        self.log.debug("BurndownChart data: %s", chart_args)
         if self.serverside_charts:
-            return tag.image(src="%s?data=%s" % (req.href.estimationtools('chart'),
+            return tag.image(
+                src="%s?data=%s" % (req.href.estimationtools('chart'),
                                     unicode_quote(chart_args)),
-                             alt="Burndown Chart (server)")
+                alt="Burndown Chart (server)")
         else:
-            return tag.image(src="http://chart.googleapis.com/chart?%s" % chart_args,
-                             alt="Burndown Chart (client)")
+            return tag.image(
+                src="http://chart.googleapis.com/chart?%s" % chart_args,
+                alt="Burndown Chart (client)")
 
     def _calculate_timetable(self, options, query_args, req):
         db = self.env.get_db_cnx()
@@ -180,11 +205,14 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
             # Fetch change history for status and effort fields for this ticket
             history_cursor = db.cursor()
-            history_cursor.execute("SELECT "
-                "DISTINCT c.field as field, c.time AS time, c.oldvalue as oldvalue, c.newvalue as newvalue "
-                "FROM ticket t, ticket_change c "
-                "WHERE t.id = %s and c.ticket = t.id and (c.field=%s or c.field='status')"
-                "ORDER BY c.time ASC", [t['id'], self.estimation_field])
+            history_cursor.execute("""
+                SELECT DISTINCT c.field AS field, c.time AS time, 
+                                c.oldvalue AS oldvalue, c.newvalue AS newvalue
+                FROM ticket t, ticket_change c 
+                WHERE t.id = %s AND c.ticket = t.id AND 
+                      (c.field=%s OR c.field='status')
+                ORDER BY c.time ASC
+                """, [t['id'], self.estimation_field])
 
             # Build up two dictionaries, mapping dates when effort/status
             # changed, to the latest effort/status on that day (in case of
@@ -199,7 +227,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
             for row in history_cursor:
                 row_field, row_time, row_old, row_new = row
-                event_date = from_timestamp(row_time).date()
+                event_date = from_utimestamp(row_time).date()
                 if row_field == self.estimation_field:
                     new_value = self._cast_estimate(row_new)
                     if new_value is not None:
@@ -217,12 +245,12 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
             # estimate/status, because it was never changed. In this case,
             # use the current (latest) value.
 
-            if not creation_date in estimate_history:
+            if creation_date not in estimate_history:
                 if earliest_estimate is not None:
                     estimate_history[creation_date] = earliest_estimate
                 else:
                     estimate_history[creation_date] = latest_estimate
-            if not creation_date in status_history:
+            if creation_date not in status_history:
                 if earliest_status is not None:
                     status_history[creation_date] = earliest_status
                 else:
@@ -240,7 +268,8 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
             while current_date <= options['enddate']:
                 if current_date in status_history:
-                    is_open = (status_history[current_date] not in self.closed_states)
+                    is_open = (
+                        status_history[current_date] not in self.closed_states)
 
                 if current_date in estimate_history:
                     current_estimate = estimate_history[current_date]
@@ -269,7 +298,8 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
         # mark ydata invalid that is after today
         remaining_days = len([d for d in dates if d > options['today']])
         if remaining_days:
-            ydata = ydata[: - remaining_days] + ['-1' for x in xrange(0, remaining_days)]
+            ydata = ydata[: - remaining_days] + ['-1' for x in
+                                                 xrange(0, remaining_days)]
 
         return xdata, ydata, maxhours
 

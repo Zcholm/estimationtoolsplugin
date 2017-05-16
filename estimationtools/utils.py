@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2008-2010 Joachim Hoessler <hoessler@gmail.com>
+# All rights reserved.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution.
+
 import urllib
 import urllib2
 from datetime import datetime
@@ -6,17 +14,10 @@ from time import strptime
 from trac.config import Option, ListOption, BoolOption
 from trac.core import TracError, Component, implements
 from trac.ticket.query import Query
+from trac.util.datefmt import from_utimestamp, utc
 from trac.util.text import unicode_urlencode
 from trac.web.api import IRequestHandler, RequestDone
 from trac.wiki.api import parse_args
-
-# 0.12 stores timestamps as microseconds. Pre-0.12 stores as seconds.
-from trac.util.datefmt import utc
-try:
-    from trac.util.datefmt import from_utimestamp as from_timestamp
-except ImportError:
-    def from_timestamp(ts):
-        return datetime.fromtimestamp(ts, utc)
 
 AVAILABLE_OPTIONS = ['startdate', 'enddate', 'today', 'width', 'height',
                      'color', 'bgcolor', 'wecolor', 'weekends', 'gridlines',
@@ -25,25 +26,25 @@ AVAILABLE_OPTIONS = ['startdate', 'enddate', 'today', 'width', 'height',
 
 def get_estimation_field():
     return Option('estimation-tools', 'estimation_field', 'estimatedhours',
-        doc="""Defines what custom field should be used to calculate
+                  doc="""Defines what custom field should be used to calculate
         estimation charts. Defaults to 'estimatedhours'""")
 
 
 def get_closed_states():
     return ListOption('estimation-tools', 'closed_states', 'closed',
-        doc="""Set to a comma separated list of workflow states that count
+                      doc="""Set to a comma separated list of workflow states that count
         as "closed", where the effort will be treated as zero, e.g.
         closed_states=closed,another_state. Defaults to closed.""")
 
 
 def get_estimation_suffix():
     return Option('estimation-tools', 'estimation_suffix', 'h',
-        doc="""Suffix used for estimations. Defaults to 'h'""")
+                  doc="""Suffix used for estimations. Defaults to 'h'""")
 
 
 def get_serverside_charts():
     return BoolOption('estimation-tools', 'serverside_charts', 'false',
-        doc="""Generate charts links internally and fetch charts server-side
+                      doc="""Generate charts links internally and fetch charts server-side
         before returning to client, instead of generating Google links that
         the users browser fetches directly. Particularly useful for sites
         served behind SSL. Server-side charts uses POST requests internally,
@@ -125,9 +126,9 @@ def parse_options(db, content, options):
         if not row:
             raise TracError("Couldn't find milestone %s" % milestone)
         if row[0]:
-            options['enddate'] = from_timestamp(row[0]).date()
+            options['enddate'] = from_utimestamp(row[0]).date()
         elif row[1]:
-            due = from_timestamp(row[1]).date()
+            due = from_utimestamp(row[1]).date()
             if due >= today:
                 options['enddate'] = due
 
@@ -135,12 +136,12 @@ def parse_options(db, content, options):
     options['today'] = options.get('today') or today
 
     if options.get('weekends'):
-        options['weekends'] = parse_bool(options['weekends'] )
+        options['weekends'] = parse_bool(options['weekends'])
 
     # all arguments that are no key should be treated as part of the query
     query_args = {}
     for key in options.keys():
-        if not key in AVAILABLE_OPTIONS:
+        if key not in AVAILABLE_OPTIONS:
             query_args[key] = options[key]
     return options, query_args
 
@@ -152,17 +153,17 @@ def execute_query(env, req, query_args):
     # see the authorized fields in the query language in
     # http://trac.edgewall.org/wiki/TracQuery#QueryLanguage
     query_string = unicode_urlencode(query_args).replace('%21=', '!=') \
-                                                .replace('%21%7E=', '!~=') \
-                                                .replace('%7E=', '~=') \
-                                                .replace('%5E=', '^=') \
-                                                .replace('%24=', '$=') \
-                                                .replace('%21%5E=', '!^=') \
-                                                .replace('%21%24=', '!$=') \
-                                                .replace('%7C', '|') \
-                                                .replace('+', ' ') \
-                                                .replace('%23', '#') \
-                                                .replace('%28', '(') \
-                                                .replace('%29', ')')
+        .replace('%21%7E=', '!~=') \
+        .replace('%7E=', '~=') \
+        .replace('%5E=', '^=') \
+        .replace('%24=', '$=') \
+        .replace('%21%5E=', '!^=') \
+        .replace('%21%24=', '!$=') \
+        .replace('%7C', '|') \
+        .replace('+', ' ') \
+        .replace('%23', '#') \
+        .replace('%28', '(') \
+        .replace('%29', ')')
     env.log.debug("query_string: %s", query_string)
     query = Query.from_string(env, query_string)
 
@@ -179,7 +180,7 @@ def parse_bool(s):
     if s is True or s is False:
         return s
     s = str(s).strip().lower()
-    return not s in ['false','f','n','0','']
+    return s not in ['false', 'f', 'n', '0', '']
 
 
 def urldecode(query):
@@ -188,7 +189,7 @@ def urldecode(query):
     a = query.split('&')
     for s in a:
         if s.find('='):
-            k,v = map(urllib.unquote, s.split('='))
+            k, v = map(urllib.unquote, s.split('='))
             try:
                 d[k].append(v)
             except KeyError:
