@@ -93,13 +93,10 @@ class GoogleChartProxy(EstimationToolsBase):
         raise RequestDone
 
 
-def parse_options(db, content, options):
+def parse_options(env, content, options):
     """Parses the parameters, makes some sanity checks, and creates default values
     for missing parameters.
     """
-    cursor = db.cursor()
-
-    # check arguments
     _, parsed_options = parse_args(content, strict=False)
 
     options.update(parsed_options)
@@ -120,17 +117,18 @@ def parse_options(db, content, options):
         # use first milestone
         milestone = options['milestone'].split('|')[0]
         # try to get end date from db
-        cursor.execute("SELECT completed, due FROM milestone WHERE name = %s",
-                       (milestone,))
-        row = cursor.fetchone()
-        if not row:
+        for completed, due in env.db_query("""
+                SELECT completed, due FROM milestone WHERE name = %s
+                """, (milestone,)):
+            if completed:
+                options['enddate'] = from_utimestamp(completed).date()
+            elif due:
+                due = from_utimestamp(due).date()
+                if due >= today:
+                    options['enddate'] = due
+            break
+        else:
             raise TracError("Couldn't find milestone %s" % milestone)
-        if row[0]:
-            options['enddate'] = from_utimestamp(row[0]).date()
-        elif row[1]:
-            due = from_utimestamp(row[1]).date()
-            if due >= today:
-                options['enddate'] = due
 
     options['enddate'] = options['enddate'] or today
     options['today'] = options.get('today') or today

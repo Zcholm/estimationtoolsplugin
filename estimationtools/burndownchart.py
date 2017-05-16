@@ -76,7 +76,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
 
         # prepare options
         req = formatter.req
-        options, query_args = parse_options(self.env.get_db_cnx(), content,
+        options, query_args = parse_options(self.env, content,
                                             copy.copy(DEFAULT_OPTIONS))
 
         if not options['startdate']:
@@ -175,8 +175,6 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
                 alt="Burndown Chart (client)")
 
     def _calculate_timetable(self, options, query_args, req):
-        db = self.env.get_db_cnx()
-
         # create dictionary with entry for each day of the required time period
         timetable = {}
 
@@ -204,16 +202,6 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
                 latest_estimate = Decimal(0)
 
             # Fetch change history for status and effort fields for this ticket
-            history_cursor = db.cursor()
-            history_cursor.execute("""
-                SELECT DISTINCT c.field AS field, c.time AS time, 
-                                c.oldvalue AS oldvalue, c.newvalue AS newvalue
-                FROM ticket t, ticket_change c 
-                WHERE t.id = %s AND c.ticket = t.id AND 
-                      (c.field=%s OR c.field='status')
-                ORDER BY c.time ASC
-                """, [t['id'], self.estimation_field])
-
             # Build up two dictionaries, mapping dates when effort/status
             # changed, to the latest effort/status on that day (in case of
             # several changes on the same day). Also record the oldest known
@@ -225,7 +213,14 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
             earliest_estimate = None
             earliest_status = None
 
-            for row in history_cursor:
+            for row in self.env.db_query("""
+                    SELECT DISTINCT c.field AS field, c.time AS time,
+                                    c.oldvalue AS oldvalue, c.newvalue AS newvalue
+                    FROM ticket t, ticket_change c
+                    WHERE t.id = %s AND c.ticket = t.id AND
+                          (c.field=%s OR c.field='status')
+                    ORDER BY c.time ASC
+                    """, [t['id'], self.estimation_field]):
                 row_field, row_time, row_old, row_new = row
                 event_date = from_utimestamp(row_time).date()
                 if row_field == self.estimation_field:

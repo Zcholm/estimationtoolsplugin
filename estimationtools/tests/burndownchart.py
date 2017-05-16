@@ -48,9 +48,9 @@ class BurndownChartTestCase(unittest.TestCase):
         keys.sort()
         for key in keys:
             ticket['hours_remaining'] = history[key]
-            ticket.save_changes("me", "testing", datetime.combine(key,
-                                                                  datetime.now(
-                                                                      utc).timetz()))
+            ticket.save_changes("me", "testing",
+                                datetime.combine(key,
+                                                 datetime.now(utc).timetz()))
 
     def _change_ticket_states(self, id, history):
         ticket = Ticket(self.env, id)
@@ -58,32 +58,30 @@ class BurndownChartTestCase(unittest.TestCase):
         keys.sort()
         for key in keys:
             ticket['status'] = history[key]
-            ticket.save_changes("me", "testing", datetime.combine(key,
-                                                                  datetime.now(
-                                                                      utc).timetz()))
+            ticket.save_changes("me", "testing",
+                                datetime.combine(key,
+                                                 datetime.now(utc).timetz()))
 
     def _extract_query(self, image):
-        """ Parses <image/> element, urldecodes the query and returns it as dict. """
+        """Parses <image/> element, urldecodes the query and returns it as 
+        dict. 
+        """
         for t, v in image.attrib:
             if t == QName('src'):
                 return urldecode(v.split('?')[1])
         return {}
 
     def test_parse_options(self):
-        db = self.env.get_db_cnx()
-        options, query_args = parse_options(db,
-                                            "milestone=milestone1, startdate=2008-02-20, enddate=2008-02-28",
-                                            {})
+        str = "milestone=milestone1, startdate=2008-02-20, enddate=2008-02-28"
+        options, query_args = parse_options(self.env, str, {})
         self.assertNotEqual(query_args['milestone'], None)
         self.assertNotEqual(options['startdate'], None)
         self.assertNotEqual(options['enddate'], None)
 
     def test_build_empty_chart(self):
         chart = BurndownChart(self.env)
-        db = self.env.get_db_cnx()
-        options, query_args = parse_options(db,
-                                            "milestone=milestone1, startdate=2008-02-20, enddate=2008-02-28",
-                                            {})
+        str = "milestone=milestone1, startdate=2008-02-20, enddate=2008-02-28"
+        options, query_args = parse_options(self.env, str, {})
         timetable = chart._calculate_timetable(options, query_args, self.req)
         xdata, ydata, maxhours = chart._scale_data(timetable, options)
         self.assertEqual(xdata,
@@ -238,14 +236,14 @@ class BurndownChartTestCase(unittest.TestCase):
         end = (start + timedelta(days=5)).strftime('%Y-%m-%d')
         start = start.strftime('%Y-%m-%d')
         chart = BurndownChart(self.env)
-        t = Ticket(self.env, self._insert_ticket('12'))
+        self._insert_ticket('12')
         result = chart.expand_macro(self.formatter, 'BurndownChart',
-                                    "milestone=milestone1, startdate=%s, enddate=%s" % (
-                                    start, end))
+                                    "milestone=milestone1, startdate=%s, enddate=%s"
+                                    % (start, end))
         self.failUnless("&amp;chtt=milestone1&amp;" in str(result))
         result = chart.expand_macro(self.formatter, 'BurndownChart',
-                                    "milestone=One & Two, startdate=%s, enddate=%s" % (
-                                    start, end))
+                                    "milestone=One & Two, startdate=%s, enddate=%s"
+                                    % (start, end))
         self.failUnless("&amp;chtt=One+%26+Two&amp;" in str(result))
 
     def test_url_encode_parenthesis(self):
@@ -261,7 +259,7 @@ class BurndownChartTestCase(unittest.TestCase):
             t['milestone'] = milestone
             t.save_changes('', '')
             result = chart.expand_macro(self.formatter, 'BurndownChart',
-                                        "milestone=%s, startdate=%s, enddate=%s" \
+                                        "milestone=%s, startdate=%s, enddate=%s"
                                         % (milestone, start, end))
             args = self._extract_query(result)
             # data
@@ -283,15 +281,15 @@ class BurndownChartTestCase(unittest.TestCase):
         end = (start + timedelta(days=5)).strftime('%Y-%m-%d')
         start = start.strftime('%Y-%m-%d')
         chart = BurndownChart(self.env)
-        t = Ticket(self.env, self._insert_ticket('12'))
+        self._insert_ticket('12')
         # Test without expected
         result = chart.expand_macro(self.formatter, 'BurndownChart',
                                     "startdate=%s, enddate=%s" % (start, end))
         self.assertEquals(self._extract_query(result)['chxr'], [u'2,0,12'])
         # Confirm Y axis changes with new higher expected
         result = chart.expand_macro(self.formatter, 'BurndownChart',
-                                    "startdate=%s, enddate=%s, expected=200" % (
-                                    start, end))
+                                    "startdate=%s, enddate=%s, expected=200"
+                                    % (start, end))
         self.assertEquals(self._extract_query(result)['chxr'], [u'2,0,200'])
 
     def test_scale_weekends(self):

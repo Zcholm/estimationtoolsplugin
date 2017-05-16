@@ -48,9 +48,8 @@ class WorkloadChart(EstimationToolsBase, WikiMacroBase):
 
     def expand_macro(self, formatter, name, content, args=None):
         req = formatter.req
-        db = self.env.get_db_cnx()
         # prepare options
-        options, query_args = parse_options(db, content,
+        options, query_args = parse_options(self.env, content,
                                             copy.copy(DEFAULT_OPTIONS))
 
         query_args[self.estimation_field + "!"] = None
