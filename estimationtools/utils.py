@@ -145,8 +145,14 @@ def parse_options(env, content, options):
 
 def execute_query(env, req, query_args):
     # set maximum number of returned tickets to 0 to get all tickets at once
+
+    def quote(v):
+        return unicode(v).replace('%', '%25').replace('&', '%26') \
+                         .replace('=', '%3D')
+
     query_args['max'] = 0
-    query_string = '&'.join('%s=%s' % item for item in query_args.iteritems())
+    query_string = '&'.join('%s=%s' % (quote(item[0]), quote(item[1]))
+                            for item in query_args.iteritems())
     env.log.debug("query_string: %s", query_string)
     query = Query.from_string(env, query_string)
 
