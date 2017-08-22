@@ -11,7 +11,7 @@
 from setuptools import setup
 
 setup(
-    name='EstimationTools',
+    name='TracEstimationTools',
     author='Joachim Hoessler',
     author_email='hoessler@gmail.com',
     description='Trac plugin for visualizing and quick editing of effort '
