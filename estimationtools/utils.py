@@ -14,8 +14,7 @@ from time import strptime
 from trac.config import Option, ListOption, BoolOption
 from trac.core import TracError, Component, implements
 from trac.ticket.query import Query
-from trac.util.datefmt import from_utimestamp, utc
-from trac.util.text import unicode_urlencode
+from trac.util.datefmt import from_utimestamp
 from trac.web.api import IRequestHandler, RequestDone
 from trac.wiki.api import parse_args
 
@@ -147,21 +146,7 @@ def parse_options(env, content, options):
 def execute_query(env, req, query_args):
     # set maximum number of returned tickets to 0 to get all tickets at once
     query_args['max'] = 0
-    # urlencode the args, converting back a few vital exceptions:
-    # see the authorized fields in the query language in
-    # http://trac.edgewall.org/wiki/TracQuery#QueryLanguage
-    query_string = unicode_urlencode(query_args).replace('%21=', '!=') \
-        .replace('%21%7E=', '!~=') \
-        .replace('%7E=', '~=') \
-        .replace('%5E=', '^=') \
-        .replace('%24=', '$=') \
-        .replace('%21%5E=', '!^=') \
-        .replace('%21%24=', '!$=') \
-        .replace('%7C', '|') \
-        .replace('+', ' ') \
-        .replace('%23', '#') \
-        .replace('%28', '(') \
-        .replace('%29', ')')
+    query_string = '&'.join('%s=%s' % item for item in query_args.iteritems())
     env.log.debug("query_string: %s", query_string)
     query = Query.from_string(env, query_string)
 
