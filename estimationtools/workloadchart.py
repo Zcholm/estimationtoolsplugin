@@ -28,11 +28,11 @@ class WorkloadChart(EstimationToolsBase, WikiMacroBase):
     per ticket owner, and the remaining work days.
 
     It has the following parameters:
-     * a comma-separated list of query parameters for the ticket selection, in 
+     * a comma-separated list of query parameters for the ticket selection, in
        the form "key=value" as specified in TracQuery#QueryLanguage.
      * `width`: width of resulting diagram (defaults to 400)
      * `height`: height of resulting diagram (defaults to 100)
-     * `color`: color specified as 6-letter string of hexadecimal values in 
+     * `color`: color specified as 6-letter string of hexadecimal values in
        the format `RRGGBB`. Defaults to `ff9900`, a nice orange.
 
     Examples:

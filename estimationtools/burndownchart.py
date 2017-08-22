@@ -34,14 +34,14 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
     and a time frame, the remaining estimated effort is calculated.
 
     The macro has the following parameters:
-     * a comma-separated list of query parameters for the ticket selection, 
+     * a comma-separated list of query parameters for the ticket selection,
        in the form "key=value" as specified in TracQuery#QueryLanguage.
      * `startdate`: '''mandatory''' parameter that specifies the start date
        of the period (ISO8601 format)
      * `enddate`: end date of the period. If omitted, it defaults to either
        the milestones (if given) `completed' date, or `due` date, or today
        (in that order) (ISO8601 format)
-     * `weekends`: include weekends in chart. Defaults to `true` 
+     * `weekends`: include weekends in chart. Defaults to `true`
      * `title`: chart title. Defaults to first milestone or 'Burndown Chart'
      * `expected`: show expected progress in chart, 0 or any number to define
        initial expected hours (defaults to 0).

@@ -16,17 +16,17 @@ from estimationtools.utils import EstimationToolsBase, get_closed_states, \
 class HoursRemaining(EstimationToolsBase, WikiMacroBase):
     """Calculates remaining estimated hours for the queried tickets.
 
-    The macro accepts a comma-separated list of query parameters for the ticket selection, 
+    The macro accepts a comma-separated list of query parameters for the ticket selection,
     in the form "key=value" as specified in TracQuery#QueryLanguage.
-    
+
     Example:
     {{{
         [[HoursRemaining(milestone=Sprint 1)]]
     }}}
     """
-        
+
     closed_states = get_closed_states()
-    
+
     def expand_macro(self, formatter, name, content):
         req = formatter.req
         _ignore, options = parse_args(content, strict=False)
@@ -39,7 +39,7 @@ class HoursRemaining(EstimationToolsBase, WikiMacroBase):
         options['status!'] = "|".join(self.closed_states)
 
         tickets = execute_query(self.env, req, options)
-        
+
         sum = 0.0
         for t in tickets:
             try:

@@ -21,7 +21,7 @@ from estimationtools.utils import EstimationToolsBase
 class HoursInPlaceEditor(EstimationToolsBase):
     """A filter to implement in-place editing for estimated hours field in
     query page.
-    
+
     Requires Trac XML-RPC Plug-in.
     """
 

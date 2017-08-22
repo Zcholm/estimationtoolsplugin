@@ -63,8 +63,8 @@ class BurndownChartTestCase(unittest.TestCase):
                                                  datetime.now(utc).timetz()))
 
     def _extract_query(self, image):
-        """Parses <image/> element, urldecodes the query and returns it as 
-        dict. 
+        """Parses <image/> element, urldecodes the query and returns it as
+        dict.
         """
         for t, v in image.attrib:
             if t == QName('src'):
