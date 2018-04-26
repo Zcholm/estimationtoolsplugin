@@ -1,37 +1,31 @@
 #!/usr/bin/env python
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2008-2010 Joachim Hoessler <hoessler@gmail.com>
+# All rights reserved.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution.
 
 
-import sys
 from setuptools import setup
-from pkg_resources import parse_version
-
-
-name = 'EstimationTools'
-version = '0.4.7'
-min_trac = '0.11.3'
-try:
-    import trac
-    if parse_version(trac.__version__) < parse_version(min_trac):
-        print "%s %s requires Trac >= %s" % (name, version, min_trac)
-        sys.exit(1)
-except ImportError:
-    pass
 
 setup(
-    name = name,
-    author = 'Joachim Hoessler',
-    author_email = 'hoessler@gmail.com',
-    description = 'Trac plugin for visualizing and quick editing of effort estimations',
-    version = version,
+    name='TracEstimationTools',
+    author='Joachim Hoessler',
+    author_email='hoessler@gmail.com',
+    description='Trac plugin for visualizing and quick editing of effort '
+                'estimations',
+    version='0.5.0',
     license='BSD',
     packages=['estimationtools'],
-    package_data = { 'estimationtools': ['htdocs/*.js', 'templates/*.html'] },
-    entry_points = {
+    package_data={'estimationtools': ['htdocs/*.js', 'templates/*.html']},
+    entry_points={
         'trac.plugins': [
             'estimationtools = estimationtools'
         ]
     },
-    test_suite = 'estimationtools.tests.test_suite',
-    tests_require = []
+    install_requires=['Trac'],
+    test_suite='estimationtools.tests.test_suite',
+    tests_require=[]
 )
