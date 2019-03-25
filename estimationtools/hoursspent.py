@@ -37,7 +37,7 @@ class HoursSpent(EstimationToolsBase, WikiMacroBase):
         sum = 0.0
         for t in tickets:
             try:
-                sum += float(t[self.estimation_field])
+                sum += float(t[self.spent_field])
             except:
                 pass
 
