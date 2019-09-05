@@ -25,7 +25,6 @@ setup(
             'estimationtools = estimationtools'
         ]
     },
-    install_requires=['Trac'],
     test_suite='estimationtools.tests.test_suite',
     tests_require=[]
 )
