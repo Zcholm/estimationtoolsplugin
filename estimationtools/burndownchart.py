@@ -366,25 +366,20 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
                 else:
                     status_history[creation_date] = latest_status
 
-            # Finally estimates to the timetable. Treat any period where the
-            # ticket was closed as estimate 0. We need to loop from ticket
+            # Finally estimates to the timetable. We need to loop from ticket
             # creation date, not just from the timetable start date, since
             # it's possible that the ticket was changed between these two
             # dates.
 
             current_date = creation_date
             current_estimate = None
-            is_open = None
 
             while current_date <= options['enddate']:
-                if current_date in status_history:
-                    is_open = (
-                        status_history[current_date] not in self.closed_states)
 
                 if current_date in estimate_history:
                     current_estimate = estimate_history[current_date]
 
-                if current_date >= options['startdate'] and is_open:
+                if current_date >= options['startdate']:
                     timetable[current_date] += current_estimate
 
                 current_date += timedelta(days=1)
