@@ -184,7 +184,7 @@ class BurndownChart(EstimationToolsBase, WikiMacroBase):
                 alt="Burndown Chart (server)")
         else:
             return tag.image(
-                src="http://chart.googleapis.com/chart?%s" % chart_args,
+                src="https://image-charts.com/chart?%s" % chart_args,
                 alt="Burndown Chart (client)")
 
     def _calculate_timetable(self, options, query_args, req):

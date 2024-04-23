@@ -48,7 +48,7 @@ class WorkloadChartTestCase(unittest.TestCase):
         # Ignore...
         result = str(result).replace('0+workdays+left', '1+workdays+left')
         self.assertEqual(result,
-            '<image src="http://chart.googleapis.com/chart?'
+            '<image src="https://image-charts.com/chart?'
             'chd=t%3A10%2C30%2C20&amp;chf=bg%2Cs%2C00000000&amp;chco=ff9900&amp;'
             'chl=A+10h%7CC+30h%7CB+20h&amp;chs=400x100&amp;cht=p3&amp;'
             'chtt=Workload+60h+%28%7E1+workdays+left%29" alt="Workload Chart (client)"/>')
@@ -66,7 +66,7 @@ class WorkloadChartTestCase(unittest.TestCase):
         # Ignore...
         result = str(result).replace('0+workdays+left', '1+workdays+left')
         self.assertEqual(result,
-            '<image src="http://chart.googleapis.com/chart?'
+            '<image src="https://image-charts.com/chart?'
             'chd=t%3A10%2C30%2C20&amp;chf=bg%2Cs%2C00000000&amp;'
             'chco=ff9900&amp;chl=A+10h%7CC+30h%7CB+20h&amp;chs=400x100&amp;'
             'cht=p3&amp;chtt=Workload+60h+%28%7E1+workdays+left%29" alt="Workload Chart (client)"/>')

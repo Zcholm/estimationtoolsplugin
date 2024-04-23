@@ -114,5 +114,5 @@ class WorkloadChart(EstimationToolsBase, WikiMacroBase):
                 alt="Workload Chart (server)")
         else:
             return tag.image(
-                src="http://chart.googleapis.com/chart?%s" % chart_args,
+                src="https://image-charts.com/chart?%s" % chart_args,
                 alt="Workload Chart (client)")
